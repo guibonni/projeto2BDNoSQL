@@ -1,0 +1,128 @@
+/* -------- DDL -------- */
+CREATE TABLE `Empresa` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Nome` varchar(255) NOT NULL,
+  `Endereco` varchar(255) DEFAULT NULL,
+  `Telefone` varchar(45) DEFAULT NULL,
+  `Site` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+CREATE TABLE `Horario` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `DiaSemana` varchar(255) NOT NULL,
+  `Horario` varchar(45) NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+CREATE TABLE `Itinerario` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Descricao` varchar(255) NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+CREATE TABLE `ItinerarioLogradouro` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `IdItinerario` int(11) NOT NULL,
+  `IdLogradouro` int(11) NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  KEY `fk_ItinerarioLogradouro_1_idx` (`IdItinerario`),
+  KEY `fk_ItinerarioLogradouro_2_idx` (`IdLogradouro`),
+  CONSTRAINT `fk_ItinerarioLogradouro_1` FOREIGN KEY (`IdItinerario`) REFERENCES `Itinerario` (`Id`),
+  CONSTRAINT `fk_ItinerarioLogradouro_2` FOREIGN KEY (`IdLogradouro`) REFERENCES `Logradouro` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+CREATE TABLE `Linha` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `IdRota` int(11) NOT NULL,
+  `IdEmpresa` int(11) NOT NULL,
+  `Descricao` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  KEY `fk_RotaEmpresa_1_idx` (`IdRota`),
+  KEY `fk_RotaEmpresa_2_idx` (`IdEmpresa`),
+  CONSTRAINT `fk_RotaEmpresa_1` FOREIGN KEY (`IdRota`) REFERENCES `Rota` (`Id`),
+  CONSTRAINT `fk_RotaEmpresa_2` FOREIGN KEY (`IdEmpresa`) REFERENCES `Empresa` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+CREATE TABLE `Logradouro` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Nome` varchar(255) NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+CREATE TABLE `Rota` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Nome` varchar(255) NOT NULL,
+  `IdItinerario` int(11) NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  KEY `fk_Rota_1_idx` (`IdItinerario`),
+  CONSTRAINT `fk_Rota_1` FOREIGN KEY (`IdItinerario`) REFERENCES `Itinerario` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+CREATE TABLE `RotaHorario` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `IdRota` int(11) NOT NULL,
+  `IdHorario` int(11) NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  KEY `fk_RotaHorario_1_idx` (`IdRota`),
+  KEY `fk_RotaHorario_2_idx` (`IdHorario`),
+  CONSTRAINT `fk_RotaHorario_1` FOREIGN KEY (`IdRota`) REFERENCES `Rota` (`Id`),
+  CONSTRAINT `fk_RotaHorario_2` FOREIGN KEY (`IdHorario`) REFERENCES `Horario` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+/* -------- CONSULTAS -------- */
+
+/*Obter todas as linhas atendidas por uma determinada empresa, dado o nome dessa empresa.*/
+
+select L.Descricao as Linha
+     , E.Nome as Empresa 
+  from Linha as L
+  join Empresa as E 
+    on E.Id = L.IdEmpresa
+   and E.Nome = 'Busões Legais'
+ order by Linha
+
+ /*Obter o itinerário de uma determinada linha de ônibus, dado o Nome(Identificação) desta linha.*/
+
+select I.Descricao Itinerario
+	 , L.Descricao as Linha 
+  from Itinerario as I
+  join Rota as R 
+    on R.IdItinerario = I.Id
+  join Linha as L 
+	on L.IdRota = R.Id
+   and L.Descricao = 'Sítio'
+
+/*Obter o quadro de horário de uma determinada linha, dado seu Nome.*/
+
+select H.Horario
+	 , L.Descricao as Linha 
+  from Horario as H
+  join RotaHorario as RH
+    on RH.IdHorario = H.Id
+  join Linha as L 
+	on L.IdRota = RH.IdRota
+    and L.Descricao = 'Area urbana'
+
+/*Obter as linhas de ônibus/empresa que passam por um determinado logradouro, dado o nome desse logradouro.*/
+
+select L.Descricao as Linha
+     , LG.Nome as Logradouro
+  from Linha as L
+  join Rota as R
+    on R.Id = L.IdRota
+  join ItinerarioLogradouro as IL
+    on IL.IdItinerario = R.IdItinerario
+  join Logradouro as LG
+    on LG.Id = IL.IdLogradouro
+   and LG.Nome = 'Rua principal'
+ order by Linha
